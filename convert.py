@@ -12,7 +12,7 @@ def convert_theme(dir_path: Path, output_base: Path):
     inf_files = list(dir_path.glob("*.inf"))
     if not inf_files:
         print(f"Warning: No .inf file found in {dir_path}")
-        return
+        return None
     
     inf_file = inf_files[0]
     print(f"Found INF file: {inf_file}")
@@ -29,7 +29,7 @@ def convert_theme(dir_path: Path, output_base: Path):
             
     if not content:
         print(f"Error: Could not read INF file {inf_file}")
-        return
+        return None
 
     # Extract SCHEME_NAME
     # e.g., SCHEME_NAME = "Amiga WB1.0"
@@ -62,7 +62,7 @@ def convert_theme(dir_path: Path, output_base: Path):
         sys.exit(1)
     except subprocess.CalledProcessError as e:
         print(f"Error converting theme: {e}")
-        return
+        return None
         
     # Create index.theme file
     index_theme_path = theme_dir / "index.theme"
@@ -76,6 +76,22 @@ Inherits=breeze,Adwaita
         f.write(index_theme_content)
         
     print(f"Successfully converted theme to: {theme_dir}\n")
+    return scheme_name, inf_file
+
+def convert_to_cape(dir_path: Path, inf_file: Path, dist_base: Path, scheme_name: str):
+    folder_name = scheme_name.replace(" ", "-")
+    cape_path = dist_base / f"{folder_name}.cape"
+    print(f"Converting theme '{scheme_name}' to macOS Mousecape format...")
+    try:
+        capeify_bin = Path(sys.executable).parent / "capeify"
+        if not capeify_bin.exists():
+            capeify_bin = "capeify"
+            
+        cmd = [str(capeify_bin), "convert", "--path", str(dir_path), "--inf-file", inf_file.name, "--out", str(cape_path)]
+        subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL)
+        print(f"Successfully converted macOS theme to: {cape_path}\n")
+    except Exception as e:
+        print(f"Warning: Failed to convert to macOS Mousecape format: {e}\n")
 
 def package_theme(theme_dir: Path, dist_base: Path):
     tar_path = dist_base / f"{theme_dir.name}.tar.gz"
@@ -109,15 +125,22 @@ def main():
     for d in directories:
         dir_path = workspace / d
         if dir_path.is_dir():
-            convert_theme(dir_path, output_base)
+            res = convert_theme(dir_path, output_base)
+            if res:
+                scheme_name, inf_file = res
+                convert_to_cape(dir_path, inf_file, dist_base, scheme_name)
             
-    print("Packaging converted themes into archives...")
+    print("Packaging converted Linux/KDE themes into archives...")
     for theme_dir in output_base.iterdir():
         if theme_dir.is_dir():
             package_theme(theme_dir, dist_base)
             
-    print(f"\nAll themes successfully packaged! Archives are located in: {dist_base}")
-    print("\nTo extract and install a theme locally, run:")
+    # Clean up temporary kde-themes folder
+    if output_base.exists():
+        shutil.rmtree(output_base)
+            
+    print(f"\nAll themes successfully packaged! Outputs (Linux .tar.gz and macOS .cape) are located in: {dist_base}")
+    print("\nTo extract and install a theme locally on Linux/KDE, run:")
     print("mkdir -p ~/.icons/")
     print(f"tar -xzf dist/Amiga-WB1.0.tar.gz -C ~/.icons/")
 

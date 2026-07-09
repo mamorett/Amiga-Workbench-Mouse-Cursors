@@ -17,37 +17,39 @@
 
 ---
 
-## Linux / KDE Installation
+## Linux/KDE & macOS Installation
 
-You can convert and install these Windows 10 cursor schemes to Xcursor themes for KDE Plasma 5.x and 6.x.
+You can convert and install these Windows 10 cursor schemes to Xcursor themes for KDE Plasma (Linux) and `.cape` themes for Mousecape (macOS).
 
 A detailed setup plan is available in [gotolinux.md](file:///gorgon/dev/Amiga-Workbench-Mouse-Cursors/gotolinux.md).
 
 ### Quick Start:
 
-1. **Install Prerequisites & Conversion Tool:**
+1. **Install Prerequisites & Tools:**
    ```bash
    python3 -m venv venv
    source venv/bin/activate
    pip install win2xcur
+   pip install git+https://github.com/mmemoo/capeify.git --ignore-requires-python
    ```
 
 2. **Run Conversion & Packaging Utility:**
    ```bash
    python3 convert.py
    ```
+   This generates `.tar.gz` and `.cape` files inside the `dist/` directory.
 
-3. **Install Themes Locally (Extract Tarballs):**
-   ```bash
-   mkdir -p ~/.icons/
-   tar -xzf dist/Amiga-WB1.0.tar.gz -C ~/.icons/
-   ```
-
-4. **Apply Cursors:**
-   * **GUI:** Open **System Settings > Colors & Themes > Cursors** and select your preferred Amiga cursor theme.
-   * **CLI:** Use the KDE Plasma theme applicator:
+3. **Install Themes:**
+   * **Linux/KDE:** Extract the desired `.tar.gz` theme package into your local `~/.icons/` directory:
+     ```bash
+     mkdir -p ~/.icons/
+     tar -xzf dist/Amiga-WB1.0.tar.gz -C ~/.icons/
+     ```
+     Then apply it via **System Settings > Appearance > Cursors** or via CLI:
      ```bash
      plasma-apply-cursortheme "Amiga WB1.0"
      ```
+   * **macOS (Mousecape):** Install [Mousecape](https://github.com/alexzielenski/Mousecape) and drag & drop the desired `.cape` file (e.g. `dist/Amiga-WB1.0.cape`) into the Mousecape window. Right-click the theme and select **Apply**.
+
 
 
